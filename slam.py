@@ -3,26 +3,29 @@ import cv2
 from display import Display
 from feature_extractor import FeatureExtractor
 
-W = 1920
-H = 1080
+W = 1920//2
+H = 1080//2
+F = 1
+K = np.array([[F, 0, W//2],
+              [0, F, H//2],
+              [0, 0, 1]])
 
 screen = Display(W, H)
-extractor = FeatureExtractor()
+extractor = FeatureExtractor(K)
 
 
 def process_frame(img):
-    img = cv2.resize(img, (W//2, H//2))
-    matches = extractor.extract(img)
+    img = cv2.resize(img, (W, H))
+    matches, pose = extractor.extract(img)
+    if pose is None:
+        return
 
     print(f'{len(matches)} matches')
-    '''
-    for kp in kps:
-        x, y = map(int, kp.pt)
-        img = cv2.circle(img, (x, y), radius = 2, color = (0, 255, 0))
-    '''
+    print(pose)
+
     for p1, p2 in matches:
-        u1, v1 = map(lambda x: int(round(x)), p1)
-        u2, v2 = map(lambda x: int(round(x)), p2)
+        u1, v1 = extractor.denormalize(p1)
+        u2, v2 = extractor.denormalize(p2)
         cv2.circle(img, (u1, v1), radius = 3, color = (0, 255, 0))
         cv2.line(img, (u1, v1), (u2, v2), color = (255, 0, 0))
 
